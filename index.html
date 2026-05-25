@@ -410,7 +410,7 @@ tr:hover td { background:var(--surface2); }
       <div class="nav-item" onclick="showPage('clients')"><span class="icon">👥</span><span>Clients</span></div>
       <div class="nav-item" onclick="showPage('stats')"><span class="icon">📈</span><span>Statistiques</span></div>
       <div class="nav-item" id="nav-users" onclick="showPage('users')"><span class="icon">👤</span><span>Utilisateurs</span></div>
-      <div class="nav-item" onclick="window.open('https://bimbiorondeur.netlify.app/','_blank')"><span class="icon">🌐</span><span>Voir la boutique</span></div>
+      <div class="nav-item" onclick="window.open('https://jean-eric.github.io/bimbiorondeur/','_blank')"><span class="icon">🌐</span><span>Voir la boutique</span></div>
     </nav>
     <div class="sidebar-footer">
       <div class="sidebar-user">
@@ -843,22 +843,13 @@ function loadState() {
   if (saved) {
     state = JSON.parse(saved);
     if (!state.users) state.users = getDefaultUsers();
+    if (!state.products) state.products = getDefaultProducts();
+    if (!state.orders) state.orders = [];
   } else {
+    // Première installation — données vierges de production
     state = {
-      products: [
-        { id:'p1', name:'Gélules BBL Importées', price:5000, stock:45, threshold:10, emoji:'💊', desc:'Gélules pour grossir le fessier et élargir le bassin', sold:23 },
-        { id:'p2', name:'Sirop Fessier aux Plantes', price:5000, stock:8, threshold:10, emoji:'🍶', desc:'Sirop naturel pour grossir le fessier', sold:18 },
-        { id:'p3', name:'Protéine Curves Boost', price:5000, stock:30, threshold:10, emoji:'💪', desc:'Protéine pour volume fessier 500g', sold:12 },
-        { id:'p4', name:'Suppo Fessier aux Plantes', price:5000, stock:5, threshold:10, emoji:'🌺', desc:'Suppositoires pour galber le fessier', sold:9 },
-        { id:'p5', name:'Poudre Africaine Naturelle', price:5000, stock:22, threshold:10, emoji:'🌿', desc:'Poudre africaine pour prise de poids', sold:15 },
-      ],
-      orders: [
-        { id:'o1', client:'Aminata Koné', phone:'+225 07 12 34 56', product:'p1', qty:2, address:'Cocody Riviera', notes:'', status:'delivered', date:'2025-05-20', total:10000 },
-        { id:'o2', client:'Fatou Diallo', phone:'+225 05 98 76 54', product:'p2', qty:1, address:'Yopougon', notes:'Appeler avant livraison', status:'confirmed', date:'2025-05-22', total:5000 },
-        { id:'o3', client:'Marie Kouassi', phone:'+225 01 23 45 67', product:'p4', qty:1, address:'Adjamé', notes:'', status:'pending', date:'2025-05-24', total:5000 },
-        { id:'o4', client:'Binta Traoré', phone:'+225 07 65 43 21', product:'p3', qty:2, address:'Plateau', notes:'', status:'pending', date:'2025-05-25', total:10000 },
-        { id:'o5', client:'Aya Ouattara', phone:'+225 05 11 22 33', product:'p5', qty:3, address:'Marcory', notes:'Paquet discret svp', status:'delivered', date:'2025-05-18', total:15000 },
-      ],
+      products: getDefaultProducts(),
+      orders: [],
       users: getDefaultUsers()
     };
     saveState();
@@ -868,7 +859,17 @@ function loadState() {
 function getDefaultUsers() {
   return [
     // passHash = SHA-256 de 'bimbioreigndeur2025'
-    { id:'u0', name:'Emma Pons', login:'admin', passHash:'f6ace8574f5b1fb741ff056de8d5cecdb44c5c7cd88c0746ee51751312c08d64', role:'admin', phone:'+225 05 05 57 35 98', active:true, createdAt:'2025-05-01' },
+    { id:'u0', name:'Emma Pons', login:'admin', passHash:'f6ace8574f5b1fb741ff056de8d5cecdb44c5c7cd88c0746ee51751312c08d64', role:'admin', phone:'+225 05 05 57 35 98', active:true, createdAt:'2025-05-25' },
+  ];
+}
+
+function getDefaultProducts() {
+  return [
+    { id:'p1', name:'Gélules BBL Importées',       price:5000, stock:0, threshold:10, emoji:'💊', desc:'Gélules importées pour grossir le fessier et élargir le bassin', sold:0 },
+    { id:'p2', name:'Sirop Fessier aux Plantes',   price:5000, stock:0, threshold:10, emoji:'🍶', desc:'Sirop naturel pour grossir le fessier, élargir le bassin et dégraisser le ventre', sold:0 },
+    { id:'p3', name:'Protéine Curves Boost',        price:5000, stock:0, threshold:10, emoji:'💪', desc:'Protéine pour favoriser le volume et le développement du fessier — 500g', sold:0 },
+    { id:'p4', name:'Suppo Fessier aux Plantes',   price:5000, stock:0, threshold:10, emoji:'🌺', desc:'Suppositoires à base de plantes pour galber le fessier et refermer les creux', sold:0 },
+    { id:'p5', name:'Poudre Africaine Naturelle',  price:5000, stock:0, threshold:10, emoji:'🌿', desc:'Poudre africaine pour prendre du poids naturellement et stimuler l\'appétit', sold:0 },
   ];
 }
 
