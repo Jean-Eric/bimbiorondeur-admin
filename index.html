@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bim Bio Rondeur — Backoffice Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* ── BRAND (invariants) ── */
+  --or1: #FF6B1A;
+  --or2: #FF8C42;
+  --gold: #D4890A;
+  --green: #2ECC71;
+  --green-pale: rgba(46,204,113,.1);
+  --red: #E74C3C;
+  --red-pale: rgba(231,76,60,.1);
+  --blue: #3498DB;
+  --blue-pale: rgba(52,152,219,.1);
+  --yellow: #F1C40F;
+  --yellow-pale: rgba(241,196,15,.1);
+  /* ── DARK (default) ── */
+  --bg: #0F0A06;
+  --surface: #1A1108;
+  --surface2: #231808;
+  --surface3: #2E2010;
+  --or-pale: rgba(255,107,26,.12);
+  --or-border: rgba(255,107,26,.25);
+  --gold-pale: rgba(212,137,10,.1);
+  --white: #FFF8F2;
+  --text: #F5E8D8;
+  --text-mid: #A8896A;
+  --text-light: #6B5540;
+  --border: rgba(255,180,100,.1);
+  --shadow: 0 4px 20px rgba(0,0,0,.4);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,.5);
+}
+
+/* ── LIGHT THEME ── */
+html.light {
+  --bg: #F7F3EE;
+  --surface: #FFFFFF;
+  --surface2: #FDF8F4;
+  --surface3: #F5EDE4;
+  --or-pale: rgba(255,107,26,.08);
+  --or-border: rgba(255,107,26,.2);
+  --gold-pale: rgba(212,137,10,.08);
+  --white: #1A0E06;
+  --text: #2D1206;
+  --text-mid: #7A4520;
+  --text-light: #B07A58;
+  --border: rgba(61,28,2,.1);
+  --shadow: 0 4px 20px rgba(61,28,2,.08);
+  --shadow-lg: 0 12px 40px rgba(61,28,2,.12);
+  --green-pale: rgba(46,204,113,.12);
+  --red-pale: rgba(231,76,60,.08);
+  --blue-pale: rgba(52,152,219,.08);
+  --yellow-pale: rgba(241,196,15,.1);
+}
+
+/* ── GLOBAL TRANSITION ── */
+*, *::before, *::after {
+  transition: background-color .35s ease, border-color .35s ease, color .25s ease, box-shadow .35s ease;
+}
+
+html { font-size:16px; }
+body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; overflow-x:hidden; }
+
+/* ── THEME TOGGLE BUTTON ── */
+.theme-toggle {
+  display:flex; align-items:center; gap:8px;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:100px; padding:6px 14px 6px 8px;
+  cursor:pointer; transition:all .2s;
+  color:var(--text-mid); font-size:.8rem; font-weight:600;
+  user-select:none;
+}
+.theme-toggle:hover { border-color:var(--or-border); color:var(--or1); }
+.theme-track {
+  width:36px; height:20px; border-radius:10px;
+  background:var(--surface3); border:1px solid var(--border);
+  position:relative; flex-shrink:0; transition:background .3s;
+}
+html.light .theme-track { background:var(--or1); border-color:var(--or1); }
+.theme-knob {
+  position:absolute; top:2px; left:2px;
+  width:14px; height:14px; border-radius:50%;
+  background:var(--text-mid); transition:transform .3s, background .3s;
+}
+html.light .theme-knob { transform:translateX(16px); background:white; }
+.theme-icon { font-size:.95rem; }
+
+/* ══════════════ LOGIN ══════════════ */
+#login-screen {
+  min-height:100vh;
+  display:flex; align-items:center; justify-content:center;
+  background: radial-gradient(ellipse at 60% 40%, rgba(255,107,26,.15) 0%, transparent 60%),
+              radial-gradient(ellipse at 20% 80%, rgba(212,137,10,.08) 0%, transparent 50%),
+              var(--bg);
+  position:relative; overflow:hidden;
+}
+.login-dots {
+  position:absolute; inset:0;
+  background-image: radial-gradient(circle, rgba(255,107,26,.15) 1px, transparent 1px);
+  background-size:32px 32px;
+  opacity:.5;
+}
+.login-box {
+  background:var(--surface);
+  border:1px solid var(--or-border);
+  border-radius:24px;
+  padding:48px 44px;
+  width:100%; max-width:420px;
+  position:relative; z-index:2;
+  box-shadow: 0 32px 80px rgba(0,0,0,.5), 0 0 0 1px rgba(255,107,26,.1);
+}
+.login-box::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:3px;
+  background:linear-gradient(90deg, var(--or1), var(--gold));
+  border-radius:24px 24px 0 0;
+}
+.login-logo { text-align:center; margin-bottom:32px; }
+.login-logo .emoji { font-size:2.8rem; display:block; margin-bottom:10px; }
+.login-logo h1 { font-family:'Syne',sans-serif; font-size:1.5rem; font-weight:800; color:var(--white); }
+.login-logo h1 span { color:var(--or1); }
+.login-logo p { font-size:.82rem; color:var(--text-mid); margin-top:4px; }
+.login-label { font-size:.75rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--text-mid); margin-bottom:8px; display:block; }
+.login-input {
+  width:100%; background:var(--surface2); border:1.5px solid var(--border);
+  border-radius:10px; padding:13px 16px; font-family:'DM Sans',sans-serif;
+  font-size:.95rem; color:var(--white); outline:none; transition:border-color .2s;
+  margin-bottom:18px;
+}
+.login-input:focus { border-color:var(--or1); box-shadow:0 0 0 3px var(--or-pale); }
+.login-btn {
+  width:100%; background:var(--or1); color:white; border:none; padding:14px;
+  border-radius:10px; font-family:'Syne',sans-serif; font-weight:700; font-size:1rem;
+  cursor:pointer; transition:all .2s; margin-top:4px;
+}
+.login-btn:hover { background:var(--or2); transform:translateY(-1px); box-shadow:0 8px 24px rgba(255,107,26,.35); }
+.login-error { background:var(--red-pale); border:1px solid rgba(231,76,60,.3); color:var(--red); font-size:.85rem; padding:10px 14px; border-radius:8px; margin-top:12px; display:none; text-align:center; }
+.login-hint { font-size:.75rem; color:var(--text-light); text-align:center; margin-top:16px; }
+
+/* ══════════════ APP SHELL ══════════════ */
+#app { display:none; min-height:100vh; }
+
+/* SIDEBAR */
+.sidebar {
+  position:fixed; top:0; left:0; bottom:0; width:240px;
+  background:var(--surface); border-right:1px solid var(--border);
+  display:flex; flex-direction:column; z-index:100;
+}
+.sidebar-logo {
+  padding:24px 20px 20px;
+  border-bottom:1px solid var(--border);
+}
+.sidebar-logo .brand { font-family:'Syne',sans-serif; font-weight:800; font-size:1.1rem; color:var(--white); }
+.sidebar-logo .brand span { color:var(--or1); }
+.sidebar-logo .sub { font-size:.72rem; color:var(--text-mid); margin-top:2px; }
+
+.sidebar-nav { padding:16px 12px; flex:1; display:flex; flex-direction:column; gap:4px; }
+.nav-item {
+  display:flex; align-items:center; gap:12px;
+  padding:11px 14px; border-radius:10px;
+  cursor:pointer; transition:all .2s;
+  font-size:.88rem; font-weight:500; color:var(--text-mid);
+  border:1px solid transparent;
+}
+.nav-item:hover { background:var(--surface2); color:var(--text); }
+.nav-item.active { background:var(--or-pale); color:var(--or1); border-color:var(--or-border); font-weight:600; }
+.nav-item .icon { font-size:1.1rem; flex-shrink:0; width:22px; text-align:center; }
+.nav-badge { background:var(--or1); color:white; font-size:.65rem; font-weight:800; padding:2px 7px; border-radius:100px; margin-left:auto; }
+
+.sidebar-footer {
+  padding:16px 12px;
+  border-top:1px solid var(--border);
+}
+.sidebar-user {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 12px; border-radius:10px;
+  background:var(--surface2);
+}
+.sidebar-user .avatar { width:32px; height:32px; border-radius:50%; background:var(--or1); display:flex; align-items:center; justify-content:center; font-size:.9rem; flex-shrink:0; }
+.sidebar-user .name { font-size:.82rem; font-weight:600; color:var(--white); }
+.sidebar-user .role { font-size:.7rem; color:var(--text-mid); }
+.logout-btn { margin-top:8px; width:100%; background:none; border:1px solid var(--border); color:var(--text-mid); padding:8px; border-radius:8px; font-family:'DM Sans',sans-serif; font-size:.8rem; cursor:pointer; transition:all .2s; }
+.logout-btn:hover { border-color:var(--red); color:var(--red); }
+
+/* MAIN CONTENT */
+.main { margin-left:240px; min-height:100vh; }
+.topbar {
+  padding:18px 32px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  background:var(--surface); position:sticky; top:0; z-index:50;
+}
+.topbar-title { font-family:'Syne',sans-serif; font-weight:700; font-size:1.25rem; color:var(--white); }
+.topbar-sub { font-size:.82rem; color:var(--text-mid); margin-top:2px; }
+.topbar-actions { display:flex; gap:10px; align-items:center; }
+
+.content { padding:28px 32px; }
+
+/* PAGES */
+.page { display:none; }
+.page.active { display:block; }
+
+/* ══════════════ DASHBOARD ══════════════ */
+.kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+.kpi-card {
+  background:var(--surface); border:1px solid var(--border); border-radius:16px;
+  padding:20px 22px; position:relative; overflow:hidden;
+  transition:transform .2s, border-color .2s;
+}
+.kpi-card:hover { transform:translateY(-2px); border-color:var(--or-border); }
+.kpi-card::before { content:''; position:absolute; top:0;left:0;right:0; height:3px; }
+.kpi-card.orange::before { background:var(--or1); }
+.kpi-card.green::before { background:var(--green); }
+.kpi-card.blue::before { background:var(--blue); }
+.kpi-card.gold::before { background:var(--gold); }
+.kpi-icon { font-size:1.6rem; margin-bottom:12px; display:block; }
+.kpi-label { font-size:.75rem; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--text-mid); margin-bottom:6px; }
+.kpi-value { font-family:'Syne',sans-serif; font-size:1.8rem; font-weight:800; color:var(--white); line-height:1; }
+.kpi-change { font-size:.78rem; margin-top:6px; }
+.kpi-change.up { color:var(--green); }
+.kpi-change.down { color:var(--red); }
+
+.dash-grid { display:grid; grid-template-columns:1.6fr 1fr; gap:20px; margin-bottom:20px; }
+.dash-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:22px; }
+.dash-card-title { font-family:'Syne',sans-serif; font-size:.95rem; font-weight:700; color:var(--white); margin-bottom:18px; display:flex; align-items:center; gap:8px; }
+
+/* Chart bars */
+.chart-bars { display:flex; align-items:flex-end; gap:8px; height:120px; }
+.chart-bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; }
+.chart-bar { width:100%; background:var(--or-pale); border-radius:6px 6px 0 0; transition:all .4s; position:relative; cursor:pointer; }
+.chart-bar:hover { background:var(--or1); }
+.chart-bar-label { font-size:.68rem; color:var(--text-mid); }
+
+/* Stock alert */
+.alert-item { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); }
+.alert-item:last-child { border-bottom:none; }
+.alert-prod { font-size:.85rem; font-weight:600; color:var(--white); }
+.alert-stock { font-size:.78rem; color:var(--text-mid); margin-top:2px; }
+.stock-badge { font-size:.72rem; font-weight:700; padding:3px 10px; border-radius:100px; }
+.stock-badge.danger { background:var(--red-pale); color:var(--red); }
+.stock-badge.warning { background:var(--yellow-pale); color:var(--yellow); }
+.stock-badge.ok { background:var(--green-pale); color:var(--green); }
+
+/* Recent orders */
+.order-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+.order-row:last-child { border-bottom:none; }
+.order-avatar { width:34px; height:34px; border-radius:50%; background:var(--or-pale); display:flex; align-items:center; justify-content:center; font-size:.9rem; flex-shrink:0; }
+.order-name { font-size:.85rem; font-weight:600; color:var(--white); }
+.order-prod { font-size:.75rem; color:var(--text-mid); }
+.order-price { font-size:.88rem; font-weight:700; color:var(--or1); margin-left:auto; }
+.order-status { font-size:.68rem; font-weight:700; padding:3px 10px; border-radius:100px; }
+
+/* ══════════════ PRODUITS ══════════════ */
+.toolbar { display:flex; gap:12px; margin-bottom:20px; align-items:center; }
+.search-input { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 16px; font-family:'DM Sans',sans-serif; font-size:.9rem; color:var(--white); outline:none; transition:border-color .2s; }
+.search-input:focus { border-color:var(--or1); }
+.search-input::placeholder { color:var(--text-light); }
+.btn { padding:10px 20px; border-radius:10px; font-family:'DM Sans',sans-serif; font-weight:600; font-size:.88rem; cursor:pointer; transition:all .2s; border:none; display:inline-flex; align-items:center; gap:7px; }
+.btn-primary { background:var(--or1); color:white; }
+.btn-primary:hover { background:var(--or2); transform:translateY(-1px); box-shadow:0 6px 18px rgba(255,107,26,.35); }
+.btn-secondary { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+.btn-secondary:hover { border-color:var(--or-border); color:var(--or1); }
+.btn-danger { background:var(--red-pale); color:var(--red); border:1px solid rgba(231,76,60,.2); }
+.btn-danger:hover { background:var(--red); color:white; }
+.btn-sm { padding:7px 14px; font-size:.8rem; border-radius:8px; }
+.btn-green { background:var(--green-pale); color:var(--green); border:1px solid rgba(46,204,113,.2); }
+.btn-green:hover { background:var(--green); color:white; }
+
+.table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; }
+table { width:100%; border-collapse:collapse; }
+thead tr { background:var(--surface2); }
+th { padding:14px 18px; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-mid); text-align:left; }
+td { padding:14px 18px; font-size:.88rem; color:var(--text); border-top:1px solid var(--border); }
+tr:hover td { background:var(--surface2); }
+.prod-thumb { width:36px; height:36px; border-radius:8px; object-fit:cover; background:var(--surface3); }
+.prod-name-cell { font-weight:600; color:var(--white); }
+
+/* ══════════════ MODAL ══════════════ */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.7); backdrop-filter:blur(4px); z-index:200; display:none; align-items:center; justify-content:center; }
+.modal-overlay.open { display:flex; }
+.modal { background:var(--surface); border:1px solid var(--or-border); border-radius:20px; padding:32px; width:100%; max-width:500px; max-height:90vh; overflow-y:auto; box-shadow:0 32px 80px rgba(0,0,0,.5); }
+.modal-title { font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:800; color:var(--white); margin-bottom:24px; display:flex; align-items:center; gap:10px; }
+.form-group { margin-bottom:18px; }
+.form-label { font-size:.75rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--text-mid); margin-bottom:8px; display:block; }
+.form-input { width:100%; background:var(--surface2); border:1.5px solid var(--border); border-radius:10px; padding:11px 14px; font-family:'DM Sans',sans-serif; font-size:.9rem; color:var(--white); outline:none; transition:border-color .2s; }
+.form-input:focus { border-color:var(--or1); }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.modal-actions { display:flex; gap:10px; margin-top:24px; justify-content:flex-end; }
+
+/* ══════════════ COMMANDES ══════════════ */
+.order-status-tabs { display:flex; gap:6px; margin-bottom:20px; flex-wrap:wrap; }
+.status-tab { padding:7px 16px; border-radius:100px; font-size:.82rem; font-weight:600; cursor:pointer; transition:all .2s; border:1px solid var(--border); color:var(--text-mid); background:var(--surface); }
+.status-tab.active { background:var(--or-pale); color:var(--or1); border-color:var(--or-border); }
+
+/* ══════════════ STATS ══════════════ */
+.stats-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
+.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px; }
+.stat-card-title { font-size:.82rem; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--text-mid); margin-bottom:16px; }
+.prod-stat-row { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.prod-stat-bar-wrap { flex:1; }
+.prod-stat-name { font-size:.85rem; color:var(--white); font-weight:600; margin-bottom:5px; }
+.prod-stat-bar { height:6px; background:var(--surface3); border-radius:3px; overflow:hidden; }
+.prod-stat-fill { height:100%; background:var(--or1); border-radius:3px; transition:width .6s ease; }
+.prod-stat-count { font-size:.82rem; color:var(--or1); font-weight:700; width:40px; text-align:right; }
+
+/* ══════════════ CLIENTS ══════════════ */
+.client-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px; margin-bottom:12px; display:flex; align-items:center; gap:16px; transition:border-color .2s; }
+.client-card:hover { border-color:var(--or-border); }
+.client-avatar { width:44px; height:44px; border-radius:50%; background:var(--or-pale); display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0; border:2px solid var(--or-border); }
+.client-name { font-weight:700; color:var(--white); font-size:.95rem; }
+.client-phone { font-size:.8rem; color:var(--text-mid); margin-top:2px; }
+.client-stats { margin-left:auto; text-align:right; }
+.client-total { font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:800; color:var(--or1); }
+.client-orders { font-size:.75rem; color:var(--text-mid); }
+
+/* ══════════════ TOASTS ══════════════ */
+.toast-container { position:fixed; bottom:24px; right:24px; z-index:300; display:flex; flex-direction:column; gap:8px; }
+.toast { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 18px; font-size:.88rem; color:var(--white); box-shadow:0 8px 24px rgba(0,0,0,.3); display:flex; align-items:center; gap:10px; animation:slideIn .3s ease; max-width:300px; }
+.toast.success { border-color:rgba(46,204,113,.4); }
+.toast.error { border-color:rgba(231,76,60,.4); }
+@keyframes slideIn { from{opacity:0;transform:translateX(20px);} to{opacity:1;transform:translateX(0);} }
+
+/* ══════════════ EXPORT ══════════════ */
+.export-btn { background:var(--green-pale); color:var(--green); border:1px solid rgba(46,204,113,.3); }
+.export-btn:hover { background:var(--green); color:white; }
+
+/* ══════════════ UTILISATEURS ══════════════ */
+.user-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:12px; display:flex; align-items:center; gap:16px; transition:border-color .2s; }
+.user-card:hover { border-color:var(--or-border); }
+.user-avatar-lg { width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0; border:2px solid; }
+.user-name { font-weight:700; color:var(--white); font-size:.95rem; }
+.user-email { font-size:.78rem; color:var(--text-mid); margin-top:2px; }
+.user-meta { font-size:.75rem; color:var(--text-light); margin-top:4px; }
+.role-badge { display:inline-flex; align-items:center; gap:5px; font-size:.72rem; font-weight:800; padding:4px 12px; border-radius:100px; letter-spacing:.04em; }
+.role-badge.admin   { background:rgba(231,76,60,.15); color:#FF7063; border:1px solid rgba(231,76,60,.25); }
+.role-badge.manager { background:rgba(155,89,182,.15); color:#C084FC; border:1px solid rgba(155,89,182,.25); }
+.role-badge.livreur { background:rgba(52,211,153,.15); color:#34D399; border:1px solid rgba(52,211,153,.25); }
+.role-badge.observer{ background:rgba(168,137,106,.15); color:var(--text-mid); border:1px solid var(--border); }
+.perm-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:16px; }
+.perm-item { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:10px 12px; }
+.perm-item-label { font-size:.72rem; color:var(--text-mid); margin-bottom:6px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
+.perm-item-value { font-size:.82rem; font-weight:700; }
+.perm-yes { color:var(--green); }
+.perm-partial { color:var(--yellow); }
+.perm-no { color:var(--text-light); }
+.perm-section { background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:14px; margin-top:12px; }
+.perm-section-title { font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--text-mid); margin-bottom:10px; }
+.perm-row { display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border); font-size:.84rem; }
+.perm-row:last-child { border-bottom:none; }
+.perm-toggle { width:36px; height:20px; border-radius:10px; border:none; cursor:pointer; position:relative; transition:background .2s; }
+.user-status { width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:5px; }
+.user-status.active { background:var(--green); box-shadow:0 0 6px rgba(46,204,113,.5); }
+.user-status.inactive { background:var(--text-light); }
+
+/* ══════════════ EMPTY STATE ══════════════ */
+.empty-state { text-align:center; padding:60px 20px; color:var(--text-mid); }
+.empty-state .icon { font-size:3rem; margin-bottom:16px; display:block; opacity:.5; }
+.empty-state p { font-size:.95rem; }
+
+/* ══════════════ RESPONSIVE ══════════════ */
+@media(max-width:900px){
+  .sidebar{ width:60px; }
+  .sidebar-logo, .nav-item span, .sidebar-user .info, .sidebar-footer .logout-btn{ display:none; }
+  .main{ margin-left:60px; }
+  .kpi-grid{ grid-template-columns:repeat(2,1fr); }
+  .dash-grid{ grid-template-columns:1fr; }
+  .stats-grid{ grid-template-columns:1fr; }
+  .content{ padding:20px 16px; }
+  .topbar{ padding:14px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LOGIN ══════════════ -->
+<div id="login-screen">
+  <div class="login-dots"></div>
+  <div class="login-box">
+    <div class="login-logo">
+      <span class="emoji">🍑</span>
+      <h1>Bim Bio <span>Rondeur</span></h1>
+      <p>Espace Administrateur</p>
+    </div>
+    <label class="login-label">Identifiant</label>
+    <input type="text" id="login-user" class="login-input" placeholder="admin" autocomplete="username">
+    <label class="login-label">Mot de passe</label>
+    <input type="password" id="login-pass" class="login-input" placeholder="••••••••" autocomplete="current-password">
+    <button class="login-btn" onclick="doLogin()">Accéder au backoffice →</button>
+    <div class="login-error" id="login-error">Identifiant ou mot de passe incorrect</div>
+    <p class="login-hint">Accès réservé à l'administratrice — Emma Pons</p>
+  </div>
+</div>
+
+<!-- ══════════════ APP ══════════════ -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand">Bim Bio <span>Rondeur</span></div>
+      <div class="sub">🔒 Backoffice Admin</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="showPage('dashboard')"><span class="icon">📊</span><span>Dashboard</span></div>
+      <div class="nav-item" onclick="showPage('produits')"><span class="icon">📦</span><span>Produits</span></div>
+      <div class="nav-item" onclick="showPage('commandes')"><span class="icon">🛒</span><span>Commandes</span><span class="nav-badge" id="pending-badge">0</span></div>
+      <div class="nav-item" onclick="showPage('clients')"><span class="icon">👥</span><span>Clients</span></div>
+      <div class="nav-item" onclick="showPage('stats')"><span class="icon">📈</span><span>Statistiques</span></div>
+      <div class="nav-item" id="nav-users" onclick="showPage('users')"><span class="icon">👤</span><span>Utilisateurs</span></div>
+      <div class="nav-item" onclick="window.open('https://bimbiorondeur.netlify.app/','_blank')"><span class="icon">🌐</span><span>Voir la boutique</span></div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar">👩</div>
+        <div class="info">
+          <div class="name">Emma Pons</div>
+          <div class="role">Administratrice</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">🚪 Déconnexion</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="page-title">Dashboard</div>
+        <div class="topbar-sub" id="page-sub">Vue d'ensemble de votre activité</div>
+      </div>
+      <div class="topbar-actions">
+        <div class="theme-toggle" onclick="toggleTheme()" title="Basculer thème clair / sombre">
+          <div class="theme-track"><div class="theme-knob"></div></div>
+          <span class="theme-icon" id="theme-icon">🌙</span>
+          <span id="theme-label">Sombre</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="exportExcel()">📥 Export Excel</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddOrder()">+ Commande</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ── DASHBOARD ── -->
+      <div class="page active" id="page-dashboard">
+        <div class="kpi-grid">
+          <div class="kpi-card orange">
+            <span class="kpi-icon">💰</span>
+            <div class="kpi-label">CA Total</div>
+            <div class="kpi-value" id="kpi-ca">0 FCFA</div>
+            <div class="kpi-change up" id="kpi-ca-change">↑ Ce mois</div>
+          </div>
+          <div class="kpi-card green">
+            <span class="kpi-icon">🛒</span>
+            <div class="kpi-label">Commandes</div>
+            <div class="kpi-value" id="kpi-orders">0</div>
+            <div class="kpi-change" id="kpi-orders-change">Total enregistrées</div>
+          </div>
+          <div class="kpi-card blue">
+            <span class="kpi-icon">👥</span>
+            <div class="kpi-label">Clients</div>
+            <div class="kpi-value" id="kpi-clients">0</div>
+            <div class="kpi-change">Clients uniques</div>
+          </div>
+          <div class="kpi-card gold">
+            <span class="kpi-icon">⚠️</span>
+            <div class="kpi-label">Alertes Stock</div>
+            <div class="kpi-value" id="kpi-alerts">0</div>
+            <div class="kpi-change down" id="kpi-alerts-label">Produits en rupture</div>
+          </div>
+        </div>
+
+        <div class="dash-grid">
+          <div class="dash-card">
+            <div class="dash-card-title">📈 Ventes par produit</div>
+            <div class="chart-bars" id="chart-bars"></div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-card-title">⚠️ Alertes stock</div>
+            <div id="stock-alerts-list"></div>
+          </div>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-card-title">🕐 Dernières commandes</div>
+          <div id="recent-orders"></div>
+        </div>
+      </div>
+
+      <!-- ── PRODUITS ── -->
+      <div class="page" id="page-produits">
+        <div class="toolbar">
+          <input type="text" class="search-input" placeholder="🔍 Rechercher un produit..." oninput="filterProducts(this.value)">
+          <button class="btn btn-primary" onclick="openAddProduct()">+ Ajouter produit</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Produit</th><th>Prix</th><th>Stock</th><th>Seuil alerte</th><th>Vendus</th><th>Statut</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="products-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── COMMANDES ── -->
+      <div class="page" id="page-commandes">
+        <div class="order-status-tabs">
+          <div class="status-tab active" onclick="filterOrders('all',this)">Toutes <span id="count-all"></span></div>
+          <div class="status-tab" onclick="filterOrders('pending',this)">⏳ En attente <span id="count-pending"></span></div>
+          <div class="status-tab" onclick="filterOrders('confirmed',this)">✅ Confirmées <span id="count-confirmed"></span></div>
+          <div class="status-tab" onclick="filterOrders('delivered',this)">🚚 Livrées <span id="count-delivered"></span></div>
+          <div class="status-tab" onclick="filterOrders('cancelled',this)">❌ Annulées <span id="count-cancelled"></span></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>#</th><th>Client</th><th>WhatsApp</th><th>Produit</th><th>Qté</th><th>Total</th><th>Date</th><th>Statut</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="orders-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── CLIENTS ── -->
+      <div class="page" id="page-clients">
+        <div class="toolbar">
+          <input type="text" class="search-input" placeholder="🔍 Rechercher un client..." oninput="filterClients(this.value)">
+          <span style="color:var(--text-mid);font-size:.85rem;" id="client-count"></span>
+        </div>
+        <div id="clients-list"></div>
+      </div>
+
+      <!-- ── STATS ── -->
+      <div class="page" id="page-stats">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-card-title">🏆 Ventes par produit</div>
+            <div id="stats-by-product"></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-title">📅 Commandes par statut</div>
+            <div id="stats-by-status"></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-title">💰 Revenus ce mois</div>
+            <div id="stats-revenue"></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-title">📦 État du stock</div>
+            <div id="stats-stock"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── UTILISATEURS ── -->
+      <div class="page" id="page-users">
+        <div class="toolbar">
+          <input type="text" class="search-input" placeholder="🔍 Rechercher un utilisateur..." oninput="filterUsers(this.value)" id="user-search">
+          <button class="btn btn-primary" id="btn-add-user" onclick="openAddUser()">+ Nouvel utilisateur</button>
+        </div>
+
+        <!-- Rôles summary cards -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;" id="role-summary"></div>
+
+        <!-- Users list -->
+        <div id="users-list"></div>
+      </div>
+
+    </div><!-- /content -->
+  </main>
+</div>
+
+<!-- ══════════════ MODAL PRODUIT ══════════════ -->
+<div class="modal-overlay" id="modal-product">
+  <div class="modal">
+    <div class="modal-title" id="modal-product-title">📦 Nouveau produit</div>
+    <input type="hidden" id="prod-id">
+    <div class="form-group">
+      <label class="form-label">Nom du produit</label>
+      <input type="text" id="prod-name" class="form-input" placeholder="ex: Gélules BBL Importées">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Prix (FCFA)</label>
+        <input type="number" id="prod-price" class="form-input" placeholder="5000" value="5000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Stock actuel</label>
+        <input type="number" id="prod-stock" class="form-input" placeholder="50">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Seuil alerte stock</label>
+        <input type="number" id="prod-threshold" class="form-input" placeholder="10" value="10">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Emoji / Icône</label>
+        <input type="text" id="prod-emoji" class="form-input" placeholder="💊" maxlength="4">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description courte</label>
+      <input type="text" id="prod-desc" class="form-input" placeholder="Gélules pour grossir le fessier...">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-product')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveProduct()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL COMMANDE ══════════════ -->
+<div class="modal-overlay" id="modal-order">
+  <div class="modal">
+    <div class="modal-title">🛒 Nouvelle commande WhatsApp</div>
+    <input type="hidden" id="order-id">
+    <div class="form-group">
+      <label class="form-label">Nom du client</label>
+      <input type="text" id="order-client" class="form-input" placeholder="Prénom et nom">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Numéro WhatsApp</label>
+      <input type="text" id="order-phone" class="form-input" placeholder="+225 07 XX XX XX XX">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Produit commandé</label>
+        <select id="order-product" class="form-input">
+          <option value="">Choisir...</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Quantité</label>
+        <input type="number" id="order-qty" class="form-input" value="1" min="1">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Adresse de livraison</label>
+      <input type="text" id="order-address" class="form-input" placeholder="Quartier, commune, Abidjan">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <input type="text" id="order-notes" class="form-input" placeholder="Instructions spéciales...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Statut</label>
+      <select id="order-status" class="form-input">
+        <option value="pending">⏳ En attente</option>
+        <option value="confirmed">✅ Confirmée</option>
+        <option value="delivered">🚚 Livrée</option>
+        <option value="cancelled">❌ Annulée</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-order')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveOrder()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div class="toast-container" id="toasts"></div>
+
+<!-- ══════════════ MODAL UTILISATEUR ══════════════ -->
+<div class="modal-overlay" id="modal-user">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-title" id="modal-user-title">👤 Nouvel utilisateur</div>
+    <input type="hidden" id="user-id">
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Prénom & Nom</label>
+        <input type="text" id="user-name" class="form-input" placeholder="Ex: Adjoua Koné">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rôle</label>
+        <select id="user-role" class="form-input" onchange="updatePermPreview()">
+          <option value="manager">Manager — Responsable ventes</option>
+          <option value="livreur">Livreur — Gestion livraisons</option>
+          <option value="observer">Observateur — Lecture seule</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Identifiant (login)</label>
+        <input type="text" id="user-login" class="form-input" placeholder="adjoua.kone">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mot de passe</label>
+        <input type="password" id="user-pass" class="form-input" placeholder="••••••••">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">WhatsApp / Téléphone</label>
+        <input type="text" id="user-phone" class="form-input" placeholder="+225 07 XX XX XX XX">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Statut</label>
+        <select id="user-active" class="form-input">
+          <option value="1">🟢 Actif</option>
+          <option value="0">⚫ Inactif</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Permissions preview -->
+    <div class="perm-section">
+      <div class="perm-section-title">Habilitations du rôle sélectionné</div>
+      <div id="perm-preview"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-user')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveUser()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// THEME TOGGLE
+// ══════════════════════════════════════════════
+function toggleTheme() {
+  const isLight = document.documentElement.classList.toggle('light');
+  localStorage.setItem('bbr_theme', isLight ? 'light' : 'dark');
+  document.getElementById('theme-icon').textContent = isLight ? '☀️' : '🌙';
+  document.getElementById('theme-label').textContent = isLight ? 'Clair' : 'Sombre';
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('bbr_theme');
+  if (saved === 'light') {
+    document.documentElement.classList.add('light');
+    setTimeout(() => {
+      const icon = document.getElementById('theme-icon');
+      const label = document.getElementById('theme-label');
+      if (icon) icon.textContent = '☀️';
+      if (label) label.textContent = 'Clair';
+    }, 100);
+  }
+}
+initTheme();
+
+// ══════════════════════════════════════════════
+// CONFIGURATION
+// ══════════════════════════════════════════════
+// ⚠️ Les mots de passe sont stockés en SHA-256 — jamais en clair
+// Pour générer un hash : https://emn178.github.io/online-tools/sha256.html
+const CONFIG = {
+  user: 'admin',
+  // SHA-256 de 'bimbioreigndeur2025'
+  passHash: 'f6ace8574f5b1fb741ff056de8d5cecdb44c5c7cd88c0746ee51751312c08d64',
+  storageKey: 'bbr_data'
+};
+
+// Hash une chaîne avec SHA-256 (Web Crypto API natif)
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let state = {
+  products: [],
+  orders: [],
+  users: [],
+};
+
+// ══════════════════════════════════════════════
+// PERMISSIONS MATRIX
+// ══════════════════════════════════════════════
+const ROLES = {
+  admin: {
+    label: 'Super Admin', emoji: '👑', color: '#FF7063',
+    borderColor: 'rgba(231,76,60,.4)', bgColor: 'rgba(231,76,60,.08)',
+    perms: { dashboard:'full', products:'crud', orders:'crud', clients:'full', stats:'full', export:true, users:'crud', settings:true }
+  },
+  manager: {
+    label: 'Manager', emoji: '💼', color: '#C084FC',
+    borderColor: 'rgba(155,89,182,.4)', bgColor: 'rgba(155,89,182,.08)',
+    perms: { dashboard:'full', products:'crud', orders:'crud', clients:'full', stats:'full', export:true, users:false, settings:false }
+  },
+  livreur: {
+    label: 'Livreur', emoji: '🚚', color: '#34D399',
+    borderColor: 'rgba(52,211,153,.4)', bgColor: 'rgba(52,211,153,.08)',
+    perms: { dashboard:'partial', products:false, orders:'partial', clients:'phone', stats:false, export:false, users:false, settings:false }
+  },
+  observer: {
+    label: 'Observateur', emoji: '👁️', color: '#A8896A',
+    borderColor: 'rgba(168,137,106,.3)', bgColor: 'rgba(168,137,106,.06)',
+    perms: { dashboard:'partial', products:'read', orders:'read', clients:false, stats:'read', export:false, users:false, settings:false }
+  }
+};
+
+const PERM_LABELS = {
+  dashboard: 'Dashboard', products: 'Produits & Stock', orders: 'Commandes',
+  clients: 'Clients & CRM', stats: 'Statistiques', export: 'Export Excel',
+  users: 'Utilisateurs', settings: 'Paramètres'
+};
+
+const PERM_VALUES = {
+  full:    { label:'Complet', cls:'perm-yes' },
+  crud:    { label:'Créer/Modifier/Supprimer', cls:'perm-yes' },
+  partial: { label:'Partiel', cls:'perm-partial' },
+  read:    { label:'Lecture seule', cls:'perm-partial' },
+  phone:   { label:'Téléphone uniquement', cls:'perm-partial' },
+  true:    { label:'Oui', cls:'perm-yes' },
+  false:   { label:'Non', cls:'perm-no' },
+};
+
+function permLabel(v) {
+  if (v === false || v === 'false') return PERM_VALUES.false;
+  if (v === true || v === 'true') return PERM_VALUES.true;
+  return PERM_VALUES[v] || PERM_VALUES.false;
+}
+
+// Current logged-in user context
+let currentUser = { login:'admin', role:'admin', name:'Emma Pons' };
+
+function canDo(perm) {
+  const role = ROLES[currentUser.role];
+  if (!role) return false;
+  const p = role.perms[perm];
+  return p && p !== false;
+}
+
+// ══════════════════════════════════════════════
+// STORAGE
+// ══════════════════════════════════════════════
+function loadState() {
+  const saved = localStorage.getItem(CONFIG.storageKey);
+  if (saved) {
+    state = JSON.parse(saved);
+    if (!state.users) state.users = getDefaultUsers();
+  } else {
+    state = {
+      products: [
+        { id:'p1', name:'Gélules BBL Importées', price:5000, stock:45, threshold:10, emoji:'💊', desc:'Gélules pour grossir le fessier et élargir le bassin', sold:23 },
+        { id:'p2', name:'Sirop Fessier aux Plantes', price:5000, stock:8, threshold:10, emoji:'🍶', desc:'Sirop naturel pour grossir le fessier', sold:18 },
+        { id:'p3', name:'Protéine Curves Boost', price:5000, stock:30, threshold:10, emoji:'💪', desc:'Protéine pour volume fessier 500g', sold:12 },
+        { id:'p4', name:'Suppo Fessier aux Plantes', price:5000, stock:5, threshold:10, emoji:'🌺', desc:'Suppositoires pour galber le fessier', sold:9 },
+        { id:'p5', name:'Poudre Africaine Naturelle', price:5000, stock:22, threshold:10, emoji:'🌿', desc:'Poudre africaine pour prise de poids', sold:15 },
+      ],
+      orders: [
+        { id:'o1', client:'Aminata Koné', phone:'+225 07 12 34 56', product:'p1', qty:2, address:'Cocody Riviera', notes:'', status:'delivered', date:'2025-05-20', total:10000 },
+        { id:'o2', client:'Fatou Diallo', phone:'+225 05 98 76 54', product:'p2', qty:1, address:'Yopougon', notes:'Appeler avant livraison', status:'confirmed', date:'2025-05-22', total:5000 },
+        { id:'o3', client:'Marie Kouassi', phone:'+225 01 23 45 67', product:'p4', qty:1, address:'Adjamé', notes:'', status:'pending', date:'2025-05-24', total:5000 },
+        { id:'o4', client:'Binta Traoré', phone:'+225 07 65 43 21', product:'p3', qty:2, address:'Plateau', notes:'', status:'pending', date:'2025-05-25', total:10000 },
+        { id:'o5', client:'Aya Ouattara', phone:'+225 05 11 22 33', product:'p5', qty:3, address:'Marcory', notes:'Paquet discret svp', status:'delivered', date:'2025-05-18', total:15000 },
+      ],
+      users: getDefaultUsers()
+    };
+    saveState();
+  }
+}
+
+function getDefaultUsers() {
+  return [
+    // passHash = SHA-256 de 'bimbioreigndeur2025'
+    { id:'u0', name:'Emma Pons', login:'admin', passHash:'f6ace8574f5b1fb741ff056de8d5cecdb44c5c7cd88c0746ee51751312c08d64', role:'admin', phone:'+225 05 05 57 35 98', active:true, createdAt:'2025-05-01' },
+  ];
+}
+
+function saveState() {
+  localStorage.setItem(CONFIG.storageKey, JSON.stringify(state));
+}
+
+// ══════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════
+async function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  if (!u || !p) { document.getElementById('login-error').style.display = 'block'; return; }
+
+  const hashed = await sha256(p);
+
+  // Vérification admin principal
+  if (u === CONFIG.user && hashed === CONFIG.passHash) {
+    currentUser = { login:'admin', role:'admin', name:'Emma Pons' };
+    afterLogin(); return;
+  }
+
+  // Vérification utilisateurs créés
+  loadState();
+  const found = state.users.find(usr =>
+    usr.login === u && usr.passHash === hashed && usr.active
+  );
+  if (found) {
+    currentUser = { login:found.login, role:found.role, name:found.name, id:found.id };
+    afterLogin();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+function afterLogin() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  loadState();
+  applyPermissionsToUI();
+  renderAll();
+  const role = ROLES[currentUser.role];
+  toast(`Bienvenue ${currentUser.name} ! ${role ? role.emoji : '👋'}`, 'success');
+  // Update sidebar user info
+  document.querySelector('.sidebar-user .name').textContent = currentUser.name;
+  document.querySelector('.sidebar-user .role').textContent = role ? role.label : 'Utilisateur';
+}
+
+function applyPermissionsToUI() {
+  const isAdmin = currentUser.role === 'admin';
+  // Show/hide Users nav item
+  const navUsers = document.getElementById('nav-users');
+  if (navUsers) navUsers.style.display = isAdmin ? 'flex' : 'none';
+  // Show/hide add user button
+  const btnAddUser = document.getElementById('btn-add-user');
+  if (btnAddUser) btnAddUser.style.display = isAdmin ? 'flex' : 'none';
+  // Export button
+  if (!canDo('export')) {
+    document.querySelector('[onclick="exportExcel()"]').style.display = 'none';
+  }
+}
+
+document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('login-user').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+function doLogout() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+}
+
+// ══════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════
+const pageTitles = {
+  dashboard: ['Dashboard', 'Vue d\'ensemble de votre activité'],
+  produits: ['Produits', 'Gérez votre catalogue et votre stock'],
+  commandes: ['Commandes', 'Suivi de toutes vos commandes WhatsApp'],
+  clients: ['Clients', 'Historique et base de vos clients'],
+  stats: ['Statistiques', 'Analyse détaillée de vos performances'],
+  users: ['Utilisateurs', 'Gestion des accès et habilitations'],
+};
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'"+name+"'")) n.classList.add('active');
+  });
+  document.getElementById('page-title').textContent = pageTitles[name][0];
+  document.getElementById('page-sub').textContent = pageTitles[name][1];
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'produits') renderProducts();
+  if (name === 'commandes') renderOrders();
+  if (name === 'clients') renderClients();
+  if (name === 'stats') renderStats();
+  if (name === 'users') renderUsers();
+}
+
+// ══════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════
+function getProduct(id) { return state.products.find(p => p.id === id); }
+function fmtPrice(n) { return Number(n).toLocaleString('fr-FR') + ' FCFA'; }
+function fmtDate(d) { return new Date(d).toLocaleDateString('fr-FR'); }
+function genId(prefix) { return prefix + Date.now(); }
+
+const STATUS_LABELS = {
+  pending: '⏳ En attente',
+  confirmed: '✅ Confirmée',
+  delivered: '🚚 Livrée',
+  cancelled: '❌ Annulée'
+};
+const STATUS_COLORS = {
+  pending: 'background:var(--yellow-pale);color:var(--yellow)',
+  confirmed: 'background:var(--blue-pale);color:var(--blue)',
+  delivered: 'background:var(--green-pale);color:var(--green)',
+  cancelled: 'background:var(--red-pale);color:var(--red)'
+};
+
+function getStockClass(p) {
+  if (p.stock <= 0) return 'danger';
+  if (p.stock <= p.threshold) return 'warning';
+  return 'ok';
+}
+function getStockLabel(p) {
+  if (p.stock <= 0) return '❌ Rupture';
+  if (p.stock <= p.threshold) return '⚠️ Faible';
+  return '✅ OK';
+}
+
+// ══════════════════════════════════════════════
+// RENDER ALL
+// ══════════════════════════════════════════════
+function renderAll() {
+  renderDashboard();
+  renderProducts();
+  renderOrders();
+  renderClients();
+  renderStats();
+  renderUsers();
+  updateBadges();
+}
+
+// ══════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════
+function renderDashboard() {
+  const delivered = state.orders.filter(o => o.status === 'delivered');
+  const ca = delivered.reduce((s,o) => s + o.total, 0);
+  const alerts = state.products.filter(p => p.stock <= p.threshold).length;
+  const clients = [...new Set(state.orders.map(o => o.phone))].length;
+
+  document.getElementById('kpi-ca').textContent = fmtPrice(ca);
+  document.getElementById('kpi-orders').textContent = state.orders.length;
+  document.getElementById('kpi-clients').textContent = clients;
+  document.getElementById('kpi-alerts').textContent = alerts;
+
+  // Chart
+  const maxSold = Math.max(...state.products.map(p => p.sold || 0), 1);
+  document.getElementById('chart-bars').innerHTML = state.products.map(p => `
+    <div class="chart-bar-wrap">
+      <div class="chart-bar" style="height:${Math.max(8, ((p.sold||0)/maxSold)*110)}px" title="${p.name}: ${p.sold||0} vendus"></div>
+      <div class="chart-bar-label">${p.emoji||'📦'}</div>
+    </div>
+  `).join('');
+
+  // Stock alerts
+  const alertProds = state.products.filter(p => p.stock <= p.threshold);
+  document.getElementById('stock-alerts-list').innerHTML = alertProds.length ? alertProds.map(p => `
+    <div class="alert-item">
+      <div>
+        <div class="alert-prod">${p.emoji} ${p.name}</div>
+        <div class="alert-stock">Stock: ${p.stock} / Seuil: ${p.threshold}</div>
+      </div>
+      <span class="stock-badge ${getStockClass(p)}">${getStockLabel(p)}</span>
+    </div>
+  `).join('') : '<div class="empty-state"><span class="icon">✅</span><p>Tous les stocks sont OK</p></div>';
+
+  // Recent orders
+  const recent = [...state.orders].sort((a,b) => new Date(b.date)-new Date(a.date)).slice(0,5);
+  document.getElementById('recent-orders').innerHTML = recent.length ? recent.map(o => {
+    const prod = getProduct(o.product);
+    return `<div class="order-row">
+      <div class="order-avatar">👤</div>
+      <div>
+        <div class="order-name">${o.client}</div>
+        <div class="order-prod">${prod ? prod.emoji+' '+prod.name : 'Produit inconnu'} · ${o.phone}</div>
+      </div>
+      <div style="margin-left:auto;text-align:right">
+        <div class="order-price">${fmtPrice(o.total)}</div>
+        <span class="order-status" style="${STATUS_COLORS[o.status]};padding:3px 10px;border-radius:100px;font-size:.68rem;font-weight:700">${STATUS_LABELS[o.status]}</span>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty-state"><span class="icon">🛒</span><p>Aucune commande</p></div>';
+}
+
+// ══════════════════════════════════════════════
+// PRODUITS
+// ══════════════════════════════════════════════
+let productFilter = '';
+function filterProducts(v) { productFilter = v.toLowerCase(); renderProducts(); }
+
+function renderProducts() {
+  const filtered = state.products.filter(p => p.name.toLowerCase().includes(productFilter));
+  document.getElementById('products-tbody').innerHTML = filtered.length ? filtered.map(p => `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:38px;height:38px;border-radius:10px;background:var(--or-pale);display:flex;align-items:center;justify-content:center;font-size:1.3rem">${p.emoji||'📦'}</div>
+          <div>
+            <div class="prod-name-cell">${p.name}</div>
+            <div style="font-size:.75rem;color:var(--text-mid)">${p.desc||''}</div>
+          </div>
+        </div>
+      </td>
+      <td><span style="color:var(--or1);font-weight:700">${fmtPrice(p.price)}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-weight:700;color:var(--white)">${p.stock}</span>
+          <button onclick="adjustStock('${p.id}',-1)" class="btn btn-sm btn-danger" style="padding:3px 8px">−</button>
+          <button onclick="adjustStock('${p.id}',1)" class="btn btn-sm btn-green" style="padding:3px 8px">+</button>
+        </div>
+      </td>
+      <td style="color:var(--text-mid)">${p.threshold}</td>
+      <td><span style="color:var(--blue);font-weight:600">${p.sold||0}</span></td>
+      <td><span class="stock-badge ${getStockClass(p)}">${getStockLabel(p)}</span></td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button onclick="openEditProduct('${p.id}')" class="btn btn-sm btn-secondary">✏️</button>
+          <button onclick="deleteProduct('${p.id}')" class="btn btn-sm btn-danger">🗑️</button>
+        </div>
+      </td>
+    </tr>
+  `).join('') : `<tr><td colspan="7"><div class="empty-state"><span class="icon">📦</span><p>Aucun produit trouvé</p></div></td></tr>`;
+}
+
+function adjustStock(id, delta) {
+  const p = state.products.find(p => p.id === id);
+  if (p) { p.stock = Math.max(0, p.stock + delta); saveState(); renderProducts(); renderDashboard(); toast(`Stock ${p.name} : ${p.stock}`, 'success'); }
+}
+
+function openAddProduct() {
+  document.getElementById('prod-id').value = '';
+  document.getElementById('prod-name').value = '';
+  document.getElementById('prod-price').value = 5000;
+  document.getElementById('prod-stock').value = '';
+  document.getElementById('prod-threshold').value = 10;
+  document.getElementById('prod-emoji').value = '';
+  document.getElementById('prod-desc').value = '';
+  document.getElementById('modal-product-title').textContent = '📦 Nouveau produit';
+  openModal('modal-product');
+}
+
+function openEditProduct(id) {
+  const p = getProduct(id);
+  if (!p) return;
+  document.getElementById('prod-id').value = p.id;
+  document.getElementById('prod-name').value = p.name;
+  document.getElementById('prod-price').value = p.price;
+  document.getElementById('prod-stock').value = p.stock;
+  document.getElementById('prod-threshold').value = p.threshold;
+  document.getElementById('prod-emoji').value = p.emoji||'';
+  document.getElementById('prod-desc').value = p.desc||'';
+  document.getElementById('modal-product-title').textContent = '✏️ Modifier produit';
+  openModal('modal-product');
+}
+
+function saveProduct() {
+  const id = document.getElementById('prod-id').value;
+  const name = document.getElementById('prod-name').value.trim();
+  if (!name) { toast('Nom du produit requis', 'error'); return; }
+  const data = {
+    name, price: +document.getElementById('prod-price').value,
+    stock: +document.getElementById('prod-stock').value,
+    threshold: +document.getElementById('prod-threshold').value,
+    emoji: document.getElementById('prod-emoji').value||'📦',
+    desc: document.getElementById('prod-desc').value, sold: 0
+  };
+  if (id) {
+    const idx = state.products.findIndex(p => p.id === id);
+    if (idx !== -1) { state.products[idx] = { ...state.products[idx], ...data }; toast('Produit modifié ✅', 'success'); }
+  } else {
+    state.products.push({ id: genId('p'), ...data });
+    toast('Produit ajouté ✅', 'success');
+  }
+  saveState(); closeModal('modal-product'); renderAll();
+}
+
+function deleteProduct(id) {
+  if (!confirm('Supprimer ce produit ?')) return;
+  state.products = state.products.filter(p => p.id !== id);
+  saveState(); renderAll(); toast('Produit supprimé', 'success');
+}
+
+// ══════════════════════════════════════════════
+// COMMANDES
+// ══════════════════════════════════════════════
+let orderFilter = 'all';
+
+function filterOrders(status, el) {
+  orderFilter = status;
+  document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderOrders();
+}
+
+function renderOrders() {
+  const counts = { all: state.orders.length, pending:0, confirmed:0, delivered:0, cancelled:0 };
+  state.orders.forEach(o => counts[o.status]++);
+  Object.keys(counts).forEach(k => {
+    const el = document.getElementById('count-' + k);
+    if (el) el.textContent = `(${counts[k]})`;
+  });
+  updateBadges();
+
+  const filtered = orderFilter === 'all' ? state.orders : state.orders.filter(o => o.status === orderFilter);
+  const sorted = [...filtered].sort((a,b) => new Date(b.date)-new Date(a.date));
+
+  document.getElementById('orders-tbody').innerHTML = sorted.length ? sorted.map((o, i) => {
+    const prod = getProduct(o.product);
+    return `<tr>
+      <td style="color:var(--text-mid);font-size:.8rem">#${String(i+1).padStart(3,'0')}</td>
+      <td>
+        <div style="font-weight:600;color:var(--white)">${o.client}</div>
+        <div style="font-size:.75rem;color:var(--text-mid)">${o.address||''}</div>
+      </td>
+      <td>
+        <a href="https://wa.me/${o.phone.replace(/\D/g,'')}" target="_blank" style="color:var(--green);font-size:.85rem;text-decoration:none">${o.phone}</a>
+      </td>
+      <td>${prod ? prod.emoji+' '+prod.name : '—'}</td>
+      <td style="text-align:center">${o.qty}</td>
+      <td style="color:var(--or1);font-weight:700">${fmtPrice(o.total)}</td>
+      <td style="color:var(--text-mid);font-size:.82rem">${fmtDate(o.date)}</td>
+      <td><span class="order-status" style="${STATUS_COLORS[o.status]};padding:4px 10px;border-radius:100px;font-size:.72rem;font-weight:700">${STATUS_LABELS[o.status]}</span></td>
+      <td>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <select onchange="changeOrderStatus('${o.id}',this.value)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:4px 8px;font-size:.75rem;cursor:pointer">
+            <option value="">Changer...</option>
+            <option value="pending">⏳ En attente</option>
+            <option value="confirmed">✅ Confirmée</option>
+            <option value="delivered">🚚 Livrée</option>
+            <option value="cancelled">❌ Annulée</option>
+          </select>
+          <button onclick="deleteOrder('${o.id}')" class="btn btn-sm btn-danger">🗑️</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="9"><div class="empty-state"><span class="icon">🛒</span><p>Aucune commande dans cette catégorie</p></div></td></tr>`;
+}
+
+function changeOrderStatus(id, status) {
+  if (!status) return;
+  const o = state.orders.find(o => o.id === id);
+  if (o) {
+    // If newly delivered, increment sold count
+    if (status === 'delivered' && o.status !== 'delivered') {
+      const prod = getProduct(o.product);
+      if (prod) { prod.sold = (prod.sold||0) + o.qty; prod.stock = Math.max(0, prod.stock - o.qty); }
+    }
+    o.status = status;
+    saveState(); renderAll(); toast('Commande mise à jour ✅', 'success');
+  }
+}
+
+function deleteOrder(id) {
+  if (!confirm('Supprimer cette commande ?')) return;
+  state.orders = state.orders.filter(o => o.id !== id);
+  saveState(); renderAll(); toast('Commande supprimée', 'success');
+}
+
+function openAddOrder() {
+  document.getElementById('order-id').value = '';
+  document.getElementById('order-client').value = '';
+  document.getElementById('order-phone').value = '';
+  document.getElementById('order-qty').value = 1;
+  document.getElementById('order-address').value = '';
+  document.getElementById('order-notes').value = '';
+  document.getElementById('order-status').value = 'pending';
+  // Populate product select
+  const sel = document.getElementById('order-product');
+  sel.innerHTML = '<option value="">Choisir...</option>' + state.products.map(p => `<option value="${p.id}">${p.emoji} ${p.name} — ${fmtPrice(p.price)}</option>`).join('');
+  openModal('modal-order');
+}
+
+function saveOrder() {
+  const client = document.getElementById('order-client').value.trim();
+  const phone = document.getElementById('order-phone').value.trim();
+  const product = document.getElementById('order-product').value;
+  const qty = +document.getElementById('order-qty').value;
+  if (!client || !phone || !product) { toast('Client, téléphone et produit requis', 'error'); return; }
+  const prod = getProduct(product);
+  const total = prod ? prod.price * qty : 0;
+  const order = {
+    id: genId('o'), client, phone, product, qty, total,
+    address: document.getElementById('order-address').value,
+    notes: document.getElementById('order-notes').value,
+    status: document.getElementById('order-status').value,
+    date: new Date().toISOString().split('T')[0]
+  };
+  if (order.status === 'delivered' && prod) {
+    prod.sold = (prod.sold||0) + qty;
+    prod.stock = Math.max(0, prod.stock - qty);
+  }
+  state.orders.push(order);
+  saveState(); closeModal('modal-order'); renderAll();
+  toast(`Commande de ${client} ajoutée ✅`, 'success');
+}
+
+// ══════════════════════════════════════════════
+// CLIENTS
+// ══════════════════════════════════════════════
+let clientFilter = '';
+function filterClients(v) { clientFilter = v.toLowerCase(); renderClients(); }
+
+function renderClients() {
+  // Build client profiles from orders
+  const clientMap = {};
+  state.orders.forEach(o => {
+    if (!clientMap[o.phone]) clientMap[o.phone] = { name: o.client, phone: o.phone, orders: [], total: 0 };
+    clientMap[o.phone].orders.push(o);
+    if (o.status === 'delivered') clientMap[o.phone].total += o.total;
+  });
+  const clients = Object.values(clientMap).filter(c => !clientFilter || c.name.toLowerCase().includes(clientFilter) || c.phone.includes(clientFilter));
+  clients.sort((a,b) => b.total - a.total);
+  document.getElementById('client-count').textContent = `${clients.length} client(s)`;
+  document.getElementById('clients-list').innerHTML = clients.length ? clients.map(c => `
+    <div class="client-card">
+      <div class="client-avatar">👩</div>
+      <div>
+        <div class="client-name">${c.name}</div>
+        <div class="client-phone">${c.phone}</div>
+        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+          ${[...new Set(c.orders.map(o => { const p=getProduct(o.product); return p?p.emoji+' '+p.name:''; }))].map(n=>`<span style="background:var(--or-pale);color:var(--or1);font-size:.68rem;padding:2px 8px;border-radius:100px">${n}</span>`).join('')}
+        </div>
+      </div>
+      <div class="client-stats">
+        <div class="client-total">${fmtPrice(c.total)}</div>
+        <div class="client-orders">${c.orders.length} commande(s)</div>
+        <a href="https://wa.me/${c.phone.replace(/\D/g,'')}" target="_blank" style="display:inline-block;margin-top:8px;background:#25D366;color:white;font-size:.72rem;font-weight:700;padding:4px 12px;border-radius:100px;text-decoration:none">💬 WhatsApp</a>
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state"><span class="icon">👥</span><p>Aucun client enregistré</p></div>';
+}
+
+// ══════════════════════════════════════════════
+// STATS
+// ══════════════════════════════════════════════
+function renderStats() {
+  const maxSold = Math.max(...state.products.map(p => p.sold||0), 1);
+  document.getElementById('stats-by-product').innerHTML = state.products.map(p => `
+    <div class="prod-stat-row">
+      <div class="prod-stat-bar-wrap">
+        <div class="prod-stat-name">${p.emoji} ${p.name}</div>
+        <div class="prod-stat-bar"><div class="prod-stat-fill" style="width:${((p.sold||0)/maxSold)*100}%"></div></div>
+      </div>
+      <div class="prod-stat-count">${p.sold||0}</div>
+    </div>
+  `).join('');
+
+  const statusCounts = { pending:0, confirmed:0, delivered:0, cancelled:0 };
+  state.orders.forEach(o => statusCounts[o.status]++);
+  const total = state.orders.length || 1;
+  document.getElementById('stats-by-status').innerHTML = Object.entries(statusCounts).map(([s, c]) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:.88rem;color:var(--text)">${STATUS_LABELS[s]}</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:80px;height:6px;background:var(--surface3);border-radius:3px;overflow:hidden">
+          <div style="width:${(c/total)*100}%;height:100%;background:var(--or1);border-radius:3px"></div>
+        </div>
+        <span style="font-weight:700;color:var(--white);width:20px;text-align:right">${c}</span>
+      </div>
+    </div>
+  `).join('');
+
+  const deliveredCA = state.orders.filter(o=>o.status==='delivered').reduce((s,o)=>s+o.total,0);
+  const confirmedCA = state.orders.filter(o=>o.status==='confirmed').reduce((s,o)=>s+o.total,0);
+  const pendingCA = state.orders.filter(o=>o.status==='pending').reduce((s,o)=>s+o.total,0);
+  document.getElementById('stats-revenue').innerHTML = `
+    <div style="padding:14px 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:.8rem;color:var(--text-mid);margin-bottom:4px">CA encaissé (livrées)</div>
+      <div style="font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--green)">${fmtPrice(deliveredCA)}</div>
+    </div>
+    <div style="padding:14px 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:.8rem;color:var(--text-mid);margin-bottom:4px">CA confirmé (en cours)</div>
+      <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;color:var(--blue)">${fmtPrice(confirmedCA)}</div>
+    </div>
+    <div style="padding:14px 0">
+      <div style="font-size:.8rem;color:var(--text-mid);margin-bottom:4px">CA potentiel (en attente)</div>
+      <div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:700;color:var(--yellow)">${fmtPrice(pendingCA)}</div>
+    </div>
+  `;
+
+  document.getElementById('stats-stock').innerHTML = state.products.map(p => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:.88rem;color:var(--text)">${p.emoji} ${p.name}</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-weight:700;color:var(--white)">${p.stock}</span>
+        <span class="stock-badge ${getStockClass(p)}">${getStockLabel(p)}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════
+// BADGES
+// ══════════════════════════════════════════════
+function updateBadges() {
+  const pending = state.orders.filter(o => o.status === 'pending').length;
+  document.getElementById('pending-badge').textContent = pending;
+  document.getElementById('pending-badge').style.display = pending ? 'inline' : 'none';
+}
+
+// ══════════════════════════════════════════════
+// EXPORT EXCEL (CSV)
+// ══════════════════════════════════════════════
+function exportExcel() {
+  const headers = ['#','Client','WhatsApp','Produit','Quantité','Total FCFA','Adresse','Notes','Statut','Date'];
+  const rows = state.orders.map((o, i) => {
+    const prod = getProduct(o.product);
+    return [i+1, o.client, o.phone, prod?prod.name:'', o.qty, o.total, o.address||'', o.notes||'', STATUS_LABELS[o.status], o.date];
+  });
+  const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `BimBioRondeur_Commandes_${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
+  toast('Export téléchargé 📥', 'success');
+}
+
+// ══════════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if(e.target === m) m.classList.remove('open'); });
+});
+
+// ══════════════════════════════════════════════
+// TOASTS
+// ══════════════════════════════════════════════
+function toast(msg, type='success') {
+  const icons = { success:'✅', error:'❌' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${icons[type]||'ℹ️'}</span> ${msg}`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ══════════════════════════════════════════════
+// UTILISATEURS
+// ══════════════════════════════════════════════
+let userFilter = '';
+function filterUsers(v) { userFilter = v.toLowerCase(); renderUsers(); }
+
+function renderUsers() {
+  // Role summary cards
+  const counts = { admin:0, manager:0, livreur:0, observer:0 };
+  state.users.forEach(u => { if(counts[u.role] !== undefined) counts[u.role]++; });
+  document.getElementById('role-summary').innerHTML = Object.entries(ROLES).map(([key, r]) => `
+    <div style="background:var(--surface);border:1px solid ${r.borderColor};border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:12px;">
+      <span style="font-size:1.6rem">${r.emoji}</span>
+      <div>
+        <div style="font-weight:700;color:var(--white);font-size:.9rem">${r.label}</div>
+        <div style="font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:${r.color}">${counts[key]}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const filtered = state.users.filter(u =>
+    !userFilter || u.name.toLowerCase().includes(userFilter) || u.login.toLowerCase().includes(userFilter)
+  );
+
+  const isAdmin = currentUser.role === 'admin';
+
+  document.getElementById('users-list').innerHTML = filtered.length ? filtered.map(u => {
+    const role = ROLES[u.role] || ROLES.observer;
+    const isMe = u.login === currentUser.login;
+    return `
+    <div class="user-card">
+      <div class="user-avatar-lg" style="background:${role.bgColor};border-color:${role.borderColor};color:${role.color}">
+        ${role.emoji}
+      </div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <div class="user-name">${u.name} ${isMe ? '<span style="font-size:.7rem;color:var(--text-mid)">(vous)</span>' : ''}</div>
+          <span class="role-badge ${u.role}">${role.emoji} ${role.label}</span>
+          <span class="user-status ${u.active ? 'active' : 'inactive'}"></span>
+          <span style="font-size:.75rem;color:var(--text-mid)">${u.active ? 'Actif' : 'Inactif'}</span>
+        </div>
+        <div class="user-email">Login : <strong style="color:var(--text)">${u.login}</strong> &nbsp;·&nbsp; ${u.phone || 'Pas de téléphone'}</div>
+        <div class="user-meta">Créé le ${new Date(u.createdAt).toLocaleDateString('fr-FR')} &nbsp;·&nbsp; ${Object.entries(role.perms).filter(([,v])=>v&&v!==false).length} permissions actives</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+        ${isAdmin && !isMe ? `
+          <button onclick="openEditUser('${u.id}')" class="btn btn-sm btn-secondary">✏️ Modifier</button>
+          <button onclick="toggleUserActive('${u.id}')" class="btn btn-sm ${u.active ? 'btn-danger' : 'btn-green'}">${u.active ? '⛔ Désactiver' : '✅ Activer'}</button>
+          ${u.role !== 'admin' ? `<button onclick="deleteUser('${u.id}')" class="btn btn-sm btn-danger">🗑️</button>` : ''}
+        ` : ''}
+        <button onclick="showUserPerms('${u.role}')" class="btn btn-sm btn-secondary">🔐 Permissions</button>
+      </div>
+    </div>
+  `}).join('') : '<div class="empty-state"><span class="icon">👤</span><p>Aucun utilisateur trouvé</p></div>';
+}
+
+function showUserPerms(roleKey) {
+  const role = ROLES[roleKey];
+  if (!role) return;
+  const html = Object.entries(PERM_LABELS).map(([key, label]) => {
+    const pv = permLabel(role.perms[key]);
+    return `<div class="perm-row"><span>${label}</span><span class="${pv.cls}" style="font-weight:700;font-size:.82rem">${pv.label}</span></div>`;
+  }).join('');
+  toast(`Permissions ${role.emoji} ${role.label} affichées dans la console`, 'success');
+  // Show inline below the clicked card — simple alert for now
+  alert(`🔐 Permissions — ${role.emoji} ${role.label}\n\n` +
+    Object.entries(PERM_LABELS).map(([k, l]) => {
+      const pv = permLabel(role.perms[k]);
+      return `${l}: ${pv.label}`;
+    }).join('\n')
+  );
+}
+
+function updatePermPreview() {
+  const roleKey = document.getElementById('user-role').value;
+  const role = ROLES[roleKey];
+  if (!role) return;
+  document.getElementById('perm-preview').innerHTML = Object.entries(PERM_LABELS).map(([key, label]) => {
+    const pv = permLabel(role.perms[key]);
+    return `<div class="perm-row"><span style="color:var(--text-mid)">${label}</span><span class="${pv.cls}" style="font-weight:700;font-size:.82rem">${pv.label}</span></div>`;
+  }).join('');
+}
+
+function openAddUser() {
+  if (!canDo('users')) { toast('Accès réservé à l\'administrateur', 'error'); return; }
+  document.getElementById('user-id').value = '';
+  document.getElementById('user-name').value = '';
+  document.getElementById('user-login').value = '';
+  document.getElementById('user-pass').value = '';
+  document.getElementById('user-phone').value = '';
+  document.getElementById('user-role').value = 'manager';
+  document.getElementById('user-active').value = '1';
+  document.getElementById('modal-user-title').textContent = '👤 Nouvel utilisateur';
+  updatePermPreview();
+  openModal('modal-user');
+}
+
+function openEditUser(id) {
+  if (!canDo('users')) { toast('Accès réservé à l\'administrateur', 'error'); return; }
+  const u = state.users.find(u => u.id === id);
+  if (!u) return;
+  document.getElementById('user-id').value = u.id;
+  document.getElementById('user-name').value = u.name;
+  document.getElementById('user-login').value = u.login;
+  document.getElementById('user-pass').value = u.pass;
+  document.getElementById('user-phone').value = u.phone || '';
+  document.getElementById('user-role').value = u.role;
+  document.getElementById('user-active').value = u.active ? '1' : '0';
+  document.getElementById('modal-user-title').textContent = '✏️ Modifier utilisateur';
+  updatePermPreview();
+  openModal('modal-user');
+}
+
+async function saveUser() {
+  if (!canDo('users')) { toast('Accès réservé', 'error'); return; }
+  const id = document.getElementById('user-id').value;
+  const name = document.getElementById('user-name').value.trim();
+  const login = document.getElementById('user-login').value.trim();
+  const pass = document.getElementById('user-pass').value;
+
+  if (!name || !login) { toast('Nom et identifiant requis', 'error'); return; }
+  if (!id && !pass) { toast('Mot de passe requis', 'error'); return; }
+
+  // Vérifier unicité du login
+  const duplicate = state.users.find(u => u.login === login && u.id !== id);
+  if (duplicate) { toast('Cet identifiant existe déjà', 'error'); return; }
+
+  const data = {
+    name, login, role: document.getElementById('user-role').value,
+    phone: document.getElementById('user-phone').value,
+    active: document.getElementById('user-active').value === '1',
+  };
+
+  // Hash le mot de passe si fourni — jamais stocker en clair
+  if (pass) data.passHash = await sha256(pass);
+
+  if (id) {
+    const idx = state.users.findIndex(u => u.id === id);
+    if (idx !== -1) {
+      // Conserver l'ancien hash si pas de nouveau mot de passe
+      const existing = state.users[idx];
+      state.users[idx] = { ...existing, ...data };
+      toast(`${name} modifié ✅`, 'success');
+    }
+  } else {
+    state.users.push({ id: genId('u'), createdAt: new Date().toISOString().split('T')[0], ...data });
+    toast(`${name} ajouté ✅`, 'success');
+  }
+  saveState(); closeModal('modal-user'); renderUsers();
+}
+
+function toggleUserActive(id) {
+  const u = state.users.find(u => u.id === id);
+  if (!u) return;
+  u.active = !u.active;
+  saveState(); renderUsers();
+  toast(`${u.name} ${u.active ? 'activé' : 'désactivé'}`, 'success');
+}
+
+function deleteUser(id) {
+  const u = state.users.find(u => u.id === id);
+  if (!u || u.role === 'admin') { toast('Impossible de supprimer cet utilisateur', 'error'); return; }
+  if (!confirm(`Supprimer l'utilisateur ${u.name} ?`)) return;
+  state.users = state.users.filter(u => u.id !== id);
+  saveState(); renderUsers(); toast('Utilisateur supprimé', 'success');
+}
+
+// Init perm preview on page load
+document.addEventListener('DOMContentLoaded', () => { updatePermPreview(); });
+</script>
+</body>
+</html>
