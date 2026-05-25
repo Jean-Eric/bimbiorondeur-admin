@@ -328,7 +328,26 @@ tr:hover td { background:var(--surface2); }
 .export-btn { background:var(--green-pale); color:var(--green); border:1px solid rgba(46,204,113,.3); }
 .export-btn:hover { background:var(--green); color:white; }
 
-/* ══════════════ UTILISATEURS ══════════════ */
+/* ══════════════ IMAGE UPLOAD ══════════════ */
+.img-upload-zone {
+  border:2px dashed var(--border); border-radius:14px;
+  padding:24px; text-align:center; cursor:pointer;
+  transition:all .2s; background:var(--surface2);
+  min-height:120px; display:flex; align-items:center; justify-content:center;
+}
+.img-upload-zone:hover { border-color:var(--or1); background:var(--or-pale); }
+.img-upload-zone.drag-over { border-color:var(--or1); background:var(--or-pale); transform:scale(1.01); }
+.img-upload-zone.has-image { padding:8px; border-style:solid; border-color:var(--or-border); }
+.img-preview-wrap { display:flex; flex-direction:column; align-items:center; gap:6px; }
+.img-upload-icon { font-size:2rem; }
+.img-upload-text { font-size:.88rem; font-weight:600; color:var(--text-mid); }
+.img-upload-sub { font-size:.75rem; color:var(--text-light); }
+.img-preview-wrap img { width:100%; max-height:200px; object-fit:cover; border-radius:10px; display:block; }
+.img-size-info { font-size:.72rem; color:var(--text-light); margin-top:4px; }
+
+/* Image in products table */
+.prod-img-thumb { width:48px; height:48px; border-radius:10px; object-fit:cover; border:1px solid var(--border); }
+.prod-emoji-thumb { width:48px; height:48px; border-radius:10px; background:var(--or-pale); display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0; }
 .user-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:12px; display:flex; align-items:center; gap:16px; transition:border-color .2s; }
 .user-card:hover { border-color:var(--or-border); }
 .user-avatar-lg { width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0; border:2px solid; }
@@ -636,6 +655,22 @@ tr:hover td { background:var(--surface2); }
   <div class="modal">
     <div class="modal-title" id="modal-product-title">📦 Nouveau produit</div>
     <input type="hidden" id="prod-id">
+    <input type="hidden" id="prod-image-data">
+
+    <!-- Image upload zone -->
+    <div class="form-group">
+      <label class="form-label">Photo du produit</label>
+      <div class="img-upload-zone" id="img-upload-zone" onclick="document.getElementById('prod-image-file').click()">
+        <div class="img-preview-wrap" id="img-preview-wrap">
+          <span class="img-upload-icon">📷</span>
+          <span class="img-upload-text">Cliquez ou glissez une photo ici</span>
+          <span class="img-upload-sub">JPG, PNG, WEBP — max 2 Mo</span>
+        </div>
+      </div>
+      <input type="file" id="prod-image-file" accept="image/*" style="display:none" onchange="handleImageUpload(this)">
+      <button type="button" class="btn btn-danger btn-sm" id="btn-remove-img" style="margin-top:8px;display:none" onclick="removeProductImage()">🗑️ Supprimer la photo</button>
+    </div>
+
     <div class="form-group">
       <label class="form-label">Nom du produit</label>
       <input type="text" id="prod-name" class="form-input" placeholder="ex: Gélules BBL Importées">
@@ -656,7 +691,7 @@ tr:hover td { background:var(--surface2); }
         <input type="number" id="prod-threshold" class="form-input" placeholder="10" value="10">
       </div>
       <div class="form-group">
-        <label class="form-label">Emoji / Icône</label>
+        <label class="form-label">Emoji / Icône (si pas de photo)</label>
         <input type="text" id="prod-emoji" class="form-input" placeholder="💊" maxlength="4">
       </div>
     </div>
@@ -666,7 +701,7 @@ tr:hover td { background:var(--surface2); }
     </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('modal-product')">Annuler</button>
-      <button class="btn btn-primary" onclick="saveProduct()">💾 Enregistrer</button>
+      <button class="btn btn-primary" onclick="saveProduct()">💾 Enregistrer & Sync</button>
     </div>
   </div>
 </div>
@@ -808,6 +843,91 @@ function initTheme() {
 initTheme();
 
 // ══════════════════════════════════════════════
+// IMAGE UPLOAD & GESTION
+// ══════════════════════════════════════════════
+const MAX_IMG_SIZE = 2 * 1024 * 1024; // 2 Mo
+const IMG_MAX_DIM  = 800; // px max width/height après redimensionnement
+
+function handleImageUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > MAX_IMG_SIZE) { toast('Image trop lourde — max 2 Mo', 'error'); return; }
+  if (!file.type.startsWith('image/')) { toast('Fichier non supporté — JPG, PNG, WEBP uniquement', 'error'); return; }
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    const original = e.target.result;
+    // Redimensionner si nécessaire pour limiter la taille du JSON
+    resizeImage(original, IMG_MAX_DIM, (resized, sizeKB) => {
+      document.getElementById('prod-image-data').value = resized;
+      showImagePreview(resized, sizeKB);
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function resizeImage(dataUrl, maxDim, callback) {
+  const img = new Image();
+  img.onload = () => {
+    let { width, height } = img;
+    if (width > maxDim || height > maxDim) {
+      if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+      else { width = Math.round(width * maxDim / height); height = maxDim; }
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = width; canvas.height = height;
+    canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+    const resized = canvas.toDataURL('image/jpeg', 0.82);
+    const sizeKB = Math.round(resized.length * 0.75 / 1024);
+    callback(resized, sizeKB);
+  };
+  img.src = dataUrl;
+}
+
+function showImagePreview(dataUrl, sizeKB) {
+  const zone = document.getElementById('img-upload-zone');
+  const wrap = document.getElementById('img-preview-wrap');
+  zone.classList.add('has-image');
+  wrap.innerHTML = `
+    <img src="${dataUrl}" alt="Aperçu produit">
+    <span class="img-size-info">📐 ${sizeKB} Ko — compressé pour la boutique</span>
+  `;
+  document.getElementById('btn-remove-img').style.display = 'inline-flex';
+}
+
+function removeProductImage() {
+  document.getElementById('prod-image-data').value = '';
+  document.getElementById('prod-image-file').value = '';
+  const zone = document.getElementById('img-upload-zone');
+  const wrap = document.getElementById('img-preview-wrap');
+  zone.classList.remove('has-image');
+  wrap.innerHTML = `
+    <span class="img-upload-icon">📷</span>
+    <span class="img-upload-text">Cliquez ou glissez une photo ici</span>
+    <span class="img-upload-sub">JPG, PNG, WEBP — max 2 Mo</span>
+  `;
+  document.getElementById('btn-remove-img').style.display = 'none';
+}
+
+// Drag & drop sur la zone
+function initImageDrop() {
+  const zone = document.getElementById('img-upload-zone');
+  if (!zone) return;
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const input = document.getElementById('prod-image-file');
+      const dt = new DataTransfer(); dt.items.add(file);
+      input.files = dt.files;
+      handleImageUpload(input);
+    }
+  });
+}
+
+// ══════════════════════════════════════════════
 // GITHUB SYNC CONFIG
 // ══════════════════════════════════════════════
 const GITHUB = {
@@ -839,7 +959,7 @@ async function syncToGitHub() {
       if (existing.ok) { const d = await existing.json(); sha = d.sha; }
     } catch(e) {}
 
-    // 2. Construire le JSON produits
+    // 2. Construire le JSON produits avec images
     const payload = {
       lastUpdated: new Date().toISOString().split('T')[0],
       whatsapp: '2250505573598',
@@ -849,6 +969,7 @@ async function syncToGitHub() {
         desc: p.desc || '',
         tags: p.tags || [],
         badge: p.badge || '',
+        image: p.image || null,  // base64 de la vraie photo
         waMsg: `Bonjour 👋, je souhaite commander *${p.name}* à ${Number(p.price).toLocaleString('fr-FR')} FCFA. Disponible ?`
       }))
     };
@@ -1206,11 +1327,15 @@ function filterProducts(v) { productFilter = v.toLowerCase(); renderProducts(); 
 
 function renderProducts() {
   const filtered = state.products.filter(p => p.name.toLowerCase().includes(productFilter));
-  document.getElementById('products-tbody').innerHTML = filtered.length ? filtered.map(p => `
+  document.getElementById('products-tbody').innerHTML = filtered.length ? filtered.map(p => {
+    const imgEl = p.image
+      ? `<img src="${p.image}" alt="${p.name}" class="prod-img-thumb">`
+      : `<div class="prod-emoji-thumb">${p.emoji||'📦'}</div>`;
+    return `
     <tr>
       <td>
         <div style="display:flex;align-items:center;gap:12px">
-          <div style="width:38px;height:38px;border-radius:10px;background:var(--or-pale);display:flex;align-items:center;justify-content:center;font-size:1.3rem">${p.emoji||'📦'}</div>
+          ${imgEl}
           <div>
             <div class="prod-name-cell">${p.name}</div>
             <div style="font-size:.75rem;color:var(--text-mid)">${p.desc||''}</div>
@@ -1234,8 +1359,8 @@ function renderProducts() {
           <button onclick="deleteProduct('${p.id}')" class="btn btn-sm btn-danger">🗑️</button>
         </div>
       </td>
-    </tr>
-  `).join('') : `<tr><td colspan="7"><div class="empty-state"><span class="icon">📦</span><p>Aucun produit trouvé</p></div></td></tr>`;
+    </tr>`;
+  }).join('') : `<tr><td colspan="7"><div class="empty-state"><span class="icon">📦</span><p>Aucun produit trouvé</p></div></td></tr>`;
 }
 
 function adjustStock(id, delta) {
@@ -1256,8 +1381,10 @@ function openAddProduct() {
   document.getElementById('prod-threshold').value = 10;
   document.getElementById('prod-emoji').value = '';
   document.getElementById('prod-desc').value = '';
+  removeProductImage();
   document.getElementById('modal-product-title').textContent = '📦 Nouveau produit';
   openModal('modal-product');
+  setTimeout(initImageDrop, 100);
 }
 
 function openEditProduct(id) {
@@ -1270,30 +1397,46 @@ function openEditProduct(id) {
   document.getElementById('prod-threshold').value = p.threshold;
   document.getElementById('prod-emoji').value = p.emoji||'';
   document.getElementById('prod-desc').value = p.desc||'';
+  // Charger l'image existante si disponible
+  if (p.image) {
+    document.getElementById('prod-image-data').value = p.image;
+    const sizeKB = Math.round(p.image.length * 0.75 / 1024);
+    showImagePreview(p.image, sizeKB);
+  } else {
+    removeProductImage();
+  }
   document.getElementById('modal-product-title').textContent = '✏️ Modifier produit';
   openModal('modal-product');
+  setTimeout(initImageDrop, 100);
 }
 
 function saveProduct() {
   const id = document.getElementById('prod-id').value;
   const name = document.getElementById('prod-name').value.trim();
   if (!name) { toast('Nom du produit requis', 'error'); return; }
+  const imageData = document.getElementById('prod-image-data').value;
   const data = {
     name, price: +document.getElementById('prod-price').value,
     stock: +document.getElementById('prod-stock').value,
     threshold: +document.getElementById('prod-threshold').value,
     emoji: document.getElementById('prod-emoji').value||'📦',
-    desc: document.getElementById('prod-desc').value, sold: 0
+    desc: document.getElementById('prod-desc').value,
+    sold: 0,
+    image: imageData || null, // base64 ou null
   };
   if (id) {
     const idx = state.products.findIndex(p => p.id === id);
-    if (idx !== -1) { state.products[idx] = { ...state.products[idx], ...data }; toast('Produit modifié ✅', 'success'); }
+    if (idx !== -1) {
+      // Conserver l'image existante si pas de nouvelle
+      if (!imageData && state.products[idx].image) data.image = state.products[idx].image;
+      state.products[idx] = { ...state.products[idx], ...data };
+      toast('Produit modifié ✅', 'success');
+    }
   } else {
     state.products.push({ id: genId('p'), ...data });
     toast('Produit ajouté ✅', 'success');
   }
   saveState(); closeModal('modal-product'); renderAll();
-  // Sync automatique vers GitHub
   syncToGitHub();
 }
 
