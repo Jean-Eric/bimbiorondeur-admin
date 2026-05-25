@@ -410,6 +410,7 @@ tr:hover td { background:var(--surface2); }
       <div class="nav-item" onclick="showPage('clients')"><span class="icon">👥</span><span>Clients</span></div>
       <div class="nav-item" onclick="showPage('stats')"><span class="icon">📈</span><span>Statistiques</span></div>
       <div class="nav-item" id="nav-users" onclick="showPage('users')"><span class="icon">👤</span><span>Utilisateurs</span></div>
+      <div class="nav-item" id="nav-settings" onclick="showPage('settings')"><span class="icon">⚙️</span><span>Paramètres</span></div>
       <div class="nav-item" onclick="window.open('https://jean-eric.github.io/bimbiorondeur/','_blank')"><span class="icon">🌐</span><span>Voir la boutique</span></div>
     </nav>
     <div class="sidebar-footer">
@@ -437,6 +438,7 @@ tr:hover td { background:var(--surface2); }
           <span class="theme-icon" id="theme-icon">🌙</span>
           <span id="theme-label">Sombre</span>
         </div>
+        <button class="btn btn-green btn-sm" id="btn-sync" onclick="manualSync()" title="Synchroniser la boutique">🔄 Sync boutique</button>
         <button class="btn btn-secondary btn-sm" onclick="exportExcel()">📥 Export Excel</button>
         <button class="btn btn-primary btn-sm" onclick="openAddOrder()">+ Commande</button>
       </div>
@@ -568,6 +570,61 @@ tr:hover td { background:var(--surface2); }
 
         <!-- Users list -->
         <div id="users-list"></div>
+      </div>
+
+      <!-- ── PARAMÈTRES ── -->
+      <div class="page" id="page-settings">
+        <div style="max-width:600px">
+
+          <!-- GitHub Sync -->
+          <div class="dash-card" style="margin-bottom:20px">
+            <div class="dash-card-title">🔄 Synchronisation GitHub — Boutique</div>
+            <p style="font-size:.88rem;color:var(--text-mid);margin-bottom:20px;line-height:1.6">
+              Entrez votre Personal Access Token GitHub pour synchroniser automatiquement les produits et stocks vers la boutique en ligne.<br>
+              <a href="https://github.com/settings/tokens/new?scopes=repo&description=ORE%27S+AI+Bim+Bio+Rondeur" target="_blank" style="color:var(--or1);font-weight:600">→ Générer un token GitHub (cliquez ici)</a>
+            </p>
+            <div class="form-group">
+              <label class="form-label">Personal Access Token GitHub</label>
+              <div style="display:flex;gap:10px">
+                <input type="password" id="gh-token-input" class="form-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="flex:1">
+                <button class="btn btn-primary" onclick="saveGithubToken()">💾 Sauver</button>
+              </div>
+              <div id="gh-token-status" style="font-size:.78rem;margin-top:8px"></div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:8px">
+              <button class="btn btn-green btn-sm" onclick="manualSync()">🔄 Tester la synchronisation</button>
+              <button class="btn btn-danger btn-sm" onclick="removeGithubToken()">🗑️ Supprimer le token</button>
+            </div>
+          </div>
+
+          <!-- Infos boutique -->
+          <div class="dash-card" style="margin-bottom:20px">
+            <div class="dash-card-title">🌐 Informations boutique</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div class="perm-row"><span style="color:var(--text-mid)">URL Boutique</span><a href="https://jean-eric.github.io/bimbiorondeur/" target="_blank" style="color:var(--or1);font-size:.82rem">jean-eric.github.io/bimbiorondeur/</a></div>
+              <div class="perm-row"><span style="color:var(--text-mid)">URL Backoffice</span><a href="https://jean-eric.github.io/bimbiorondeur-admin/" target="_blank" style="color:var(--or1);font-size:.82rem">jean-eric.github.io/bimbiorondeur-admin/</a></div>
+              <div class="perm-row"><span style="color:var(--text-mid)">WhatsApp Business</span><span style="color:var(--text);font-size:.85rem">+225 05 05 57 35 98</span></div>
+              <div class="perm-row"><span style="color:var(--text-mid)">Fichier source produits</span><span style="color:var(--text);font-size:.82rem;font-family:monospace">produits.json</span></div>
+            </div>
+          </div>
+
+          <!-- Changer mot de passe -->
+          <div class="dash-card">
+            <div class="dash-card-title">🔐 Changer le mot de passe admin</div>
+            <p style="font-size:.82rem;color:var(--text-mid);margin-bottom:16px">Le nouveau mot de passe sera hashé en SHA-256 et stocké de façon sécurisée.</p>
+            <div class="form-group">
+              <label class="form-label">Nouveau mot de passe</label>
+              <input type="password" id="new-pass-input" class="form-input" placeholder="Minimum 8 caractères">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirmer le mot de passe</label>
+              <input type="password" id="confirm-pass-input" class="form-input" placeholder="Répétez le mot de passe">
+            </div>
+            <button class="btn btn-primary" onclick="changeAdminPass()">🔐 Changer le mot de passe</button>
+            <div id="pass-status" style="font-size:.78rem;margin-top:8px"></div>
+          </div>
+
+        </div>
       </div>
 
     </div><!-- /content -->
@@ -749,6 +806,75 @@ function initTheme() {
   }
 }
 initTheme();
+
+// ══════════════════════════════════════════════
+// GITHUB SYNC CONFIG
+// ══════════════════════════════════════════════
+const GITHUB = {
+  owner: 'jean-eric',
+  repo: 'bimbiorondeur',
+  file: 'produits.json',
+  branch: 'main',
+  // Token GitHub à saisir par Emma dans Paramètres
+  get token() { return localStorage.getItem('bbr_gh_token') || ''; }
+};
+
+// Sync produits vers GitHub (produits.json)
+async function syncToGitHub() {
+  if (!GITHUB.token) {
+    toast('⚠️ Token GitHub non configuré — allez dans Paramètres', 'error');
+    return false;
+  }
+  try {
+    // 1. Récupérer le SHA actuel du fichier
+    const headers = {
+      'Authorization': `token ${GITHUB.token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.github.v3+json'
+    };
+    const url = `https://api.github.com/repos/${GITHUB.owner}/${GITHUB.repo}/contents/${GITHUB.file}`;
+    let sha = '';
+    try {
+      const existing = await fetch(url, { headers });
+      if (existing.ok) { const d = await existing.json(); sha = d.sha; }
+    } catch(e) {}
+
+    // 2. Construire le JSON produits
+    const payload = {
+      lastUpdated: new Date().toISOString().split('T')[0],
+      whatsapp: '2250505573598',
+      products: state.products.map(p => ({
+        id: p.id, name: p.name, emoji: p.emoji || '📦',
+        price: p.price, stock: p.stock,
+        desc: p.desc || '',
+        tags: p.tags || [],
+        badge: p.badge || '',
+        waMsg: `Bonjour 👋, je souhaite commander *${p.name}* à ${Number(p.price).toLocaleString('fr-FR')} FCFA. Disponible ?`
+      }))
+    };
+
+    // 3. Push vers GitHub
+    const body = {
+      message: `ORE'S AI BO — Mise à jour produits ${new Date().toLocaleString('fr-FR')}`,
+      content: btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2)))),
+      branch: GITHUB.branch,
+    };
+    if (sha) body.sha = sha;
+
+    const res = await fetch(url, { method:'PUT', headers, body: JSON.stringify(body) });
+    if (res.ok) {
+      toast('✅ Boutique synchronisée via GitHub !', 'success');
+      return true;
+    } else {
+      const err = await res.json();
+      toast(`Erreur GitHub : ${err.message}`, 'error');
+      return false;
+    }
+  } catch(e) {
+    toast('Erreur réseau GitHub', 'error');
+    return false;
+  }
+}
 
 // ══════════════════════════════════════════════
 // CONFIGURATION
@@ -953,6 +1079,7 @@ const pageTitles = {
   clients: ['Clients', 'Historique et base de vos clients'],
   stats: ['Statistiques', 'Analyse détaillée de vos performances'],
   users: ['Utilisateurs', 'Gestion des accès et habilitations'],
+  settings: ['Paramètres', 'Configuration GitHub, boutique et sécurité'],
 };
 
 function showPage(name) {
@@ -970,6 +1097,7 @@ function showPage(name) {
   if (name === 'clients') renderClients();
   if (name === 'stats') renderStats();
   if (name === 'users') renderUsers();
+  if (name === 'settings') renderSettings();
 }
 
 // ══════════════════════════════════════════════
@@ -1112,7 +1240,12 @@ function renderProducts() {
 
 function adjustStock(id, delta) {
   const p = state.products.find(p => p.id === id);
-  if (p) { p.stock = Math.max(0, p.stock + delta); saveState(); renderProducts(); renderDashboard(); toast(`Stock ${p.name} : ${p.stock}`, 'success'); }
+  if (p) {
+    p.stock = Math.max(0, p.stock + delta);
+    saveState(); renderProducts(); renderDashboard();
+    toast(`Stock ${p.name} : ${p.stock}`, 'success');
+    syncToGitHub();
+  }
 }
 
 function openAddProduct() {
@@ -1160,12 +1293,15 @@ function saveProduct() {
     toast('Produit ajouté ✅', 'success');
   }
   saveState(); closeModal('modal-product'); renderAll();
+  // Sync automatique vers GitHub
+  syncToGitHub();
 }
 
 function deleteProduct(id) {
   if (!confirm('Supprimer ce produit ?')) return;
   state.products = state.products.filter(p => p.id !== id);
   saveState(); renderAll(); toast('Produit supprimé', 'success');
+  syncToGitHub();
 }
 
 // ══════════════════════════════════════════════
@@ -1590,6 +1726,63 @@ function deleteUser(id) {
   if (!confirm(`Supprimer l'utilisateur ${u.name} ?`)) return;
   state.users = state.users.filter(u => u.id !== id);
   saveState(); renderUsers(); toast('Utilisateur supprimé', 'success');
+}
+
+// ══════════════════════════════════════════════
+// PARAMÈTRES
+// ══════════════════════════════════════════════
+function renderSettings() {
+  const hasToken = !!GITHUB.token;
+  const el = document.getElementById('gh-token-status');
+  if (el) el.innerHTML = hasToken
+    ? '<span style="color:var(--green)">✅ Token configuré — synchronisation active</span>'
+    : '<span style="color:var(--text-light)">⚠️ Aucun token — synchronisation désactivée</span>';
+  const inp = document.getElementById('gh-token-input');
+  if (inp && hasToken) inp.placeholder = 'Token configuré (masqué)';
+}
+
+function saveGithubToken() {
+  const token = document.getElementById('gh-token-input').value.trim();
+  if (!token) { toast('Token vide', 'error'); return; }
+  if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
+    toast('Format token invalide — doit commencer par ghp_ ou github_pat_', 'error'); return;
+  }
+  localStorage.setItem('bbr_gh_token', token);
+  document.getElementById('gh-token-input').value = '';
+  renderSettings();
+  toast('Token GitHub sauvegardé ✅', 'success');
+  manualSync();
+}
+
+function removeGithubToken() {
+  if (!confirm('Supprimer le token GitHub ?')) return;
+  localStorage.removeItem('bbr_gh_token');
+  renderSettings();
+  toast('Token supprimé', 'success');
+}
+
+async function manualSync() {
+  const btn = document.getElementById('btn-sync');
+  if (btn) { btn.textContent = '⏳ Sync...'; btn.disabled = true; }
+  await syncToGitHub();
+  if (btn) { btn.textContent = '🔄 Sync boutique'; btn.disabled = false; }
+}
+
+async function changeAdminPass() {
+  const np = document.getElementById('new-pass-input').value;
+  const cp = document.getElementById('confirm-pass-input').value;
+  const status = document.getElementById('pass-status');
+  if (np.length < 8) { status.innerHTML = '<span style="color:var(--red)">Minimum 8 caractères</span>'; return; }
+  if (np !== cp) { status.innerHTML = '<span style="color:var(--red)">Les mots de passe ne correspondent pas</span>'; return; }
+  const hash = await sha256(np);
+  CONFIG.passHash = hash;
+  // Mettre à jour aussi dans les users
+  const adminUser = state.users.find(u => u.login === 'admin');
+  if (adminUser) { adminUser.passHash = hash; saveState(); }
+  document.getElementById('new-pass-input').value = '';
+  document.getElementById('confirm-pass-input').value = '';
+  status.innerHTML = '<span style="color:var(--green)">✅ Mot de passe changé — notez le bien !</span>';
+  toast('Mot de passe mis à jour ✅', 'success');
 }
 
 // Init perm preview on page load
